@@ -1,0 +1,3 @@
+# ignoring results directory with many large output files
+
+results/

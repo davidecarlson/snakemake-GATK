@@ -1,0 +1,66 @@
+import shutil
+
+configfile:
+    "config.yaml"
+
+# read config file to get run-specific informatoin
+
+SAMPLES, = glob_wildcards(config['bams']+"/{id}.sorted.bam")
+
+print(len(SAMPLES))
+
+REF=config["ref"]
+SCRIPTS=config["scripts"]
+print(SAMPLES)
+
+onstart:
+	print("The samples used in this analysis are:"),
+	print(SAMPLES),
+	print("Running the variant caller pipeline") 
+
+#The pipeline is run twice - once to bootstrap a filtered set of variants for base quality score recalibration and a second time to generate the actual results
+
+rule all:
+	input:
+                expand(config['results_loc']+"/bams/{sample}.sorted.RG.bam", sample=SAMPLES),
+                expand(config['results_loc']+"/bams/{sample}.sorted.RG.bam.bai", sample=SAMPLES),
+                expand(config['results_loc']+"/bams/{sample}.mosdepth.summary.txt", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}.combined.g.vcf.gz", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}.combined.g.vcf.gz.tbi", sample=SAMPLES),
+                config['results_loc']+"/gvcf/all.g.vcf.gz",
+                config['results_loc']+"/vcfs/all.rnd1.vcf.gz",
+                config['results_loc']+"/vcfs/all.rnd1.filtered.vcf.gz",
+                config['results_loc']+"/vcfs/all.rnd1.filtered.snps.vcf.gz",
+                expand(config['results_loc']+"/bams/{sample}.sorted.RG.recal.bam", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}_recal", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}.combined.recal.g.vcf.gz", sample=SAMPLES),
+                expand(config['results_loc']+"/gvcf/{sample}.combined.recal.g.vcf.gz.tbi", sample=SAMPLES),
+                config['results_loc']+"/gvcf/all.recal.g.vcf.gz",
+                config['results_loc']+"/vcfs/all.recal.vcf.gz",
+                config['results_loc']+"/vcfs/all.recal.filtered.vcf.gz",
+                config['results_loc']+"/vcfs/all.recal.filtered.min1geno.vcf.gz"
+	
+include:        "rules/replace_readGroups.smk"
+include:        "rules/rnd1_bamIndex.smk"
+include:        "rules/depth.smk"
+include:	"rules/rnd1_parallel_hapcaller.smk"
+include:        "rules/rnd1_mergeIntervals.smk"
+include:        "rules/rnd1_indexVCF.smk"
+include:        "rules/rnd1_combineGVCF.smk"
+include:        "rules/rnd1_jointGenotype.smk"
+include:        "rules/rnd1_filterVariants.smk"
+include:        "rules/rnd1_selectVariants.smk"
+include:        "rules/BQSR.smk"
+include:        "rules/rnd2_parallel_hapcaller.smk"
+include:        "rules/rnd2_mergeIntervals.smk"
+include:        "rules/rnd2_indexVCF.smk"
+include:        "rules/rnd2_combineGVCF.smk"
+include:        "rules/rnd2_jointGenotype.smk"
+include:        "rules/rnd2_filterVariants.smk"
+include:        "rules/rnd2_SelectVariants.smk"
+#include:        "rules/rnd2_filterVariantsNEW.smk"
+
+onsuccess:
+	print("Variant Caller analysis finished!")
+	shutil.rmtree(".snakemake")

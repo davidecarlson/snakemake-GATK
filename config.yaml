@@ -1,0 +1,12 @@
+#provide paths to read alignments, reference genome, GATK executable, desired location for results, and the directory
+# with scripts needed for the pipeline
+bams:
+    "/bowman/datahome_migrated/oenothera/genomic/gbs_2020/ddRAD/bams"
+ref:
+    "/bowman/datahome_migrated/oenothera/reference/elata_reference_assembly.fasta"
+gatk:
+    "/home/progs/gatk-4.1.6.0/gatk"
+results_loc:
+        "/bowman/datahome_migrated/oenothera/genomic/gbs_2020/ddRAD/gatk/results"
+scripts:
+    "/bowman/datahome_migrated/oenothera/genomic/gbs_2020/ddRAD/gatk/scripts"
